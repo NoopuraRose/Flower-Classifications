@@ -1,0 +1,6 @@
+_pycache_/
+.venv/
+runs/
+static/
+Training Data_split/
+rose.mp4/

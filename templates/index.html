@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BloomLens · Flower Classifier</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: { ink: '#172019', leaf: '#2f6b4f', cream: '#f8f7f1', blush: '#f2d9d0' },
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-cream text-ink">
+  <main class="mx-auto max-w-6xl px-5 py-8 sm:px-8 lg:py-14">
+    <nav class="mb-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-3 text-lg font-bold tracking-tight">
+        <span class="grid h-10 w-10 place-items-center rounded-2xl bg-leaf text-xl text-white">✿</span>
+        BloomLens
+      </a>
+      <span class="rounded-full border border-ink/10 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-ink/60">AI flower classifier</span>
+    </nav>
+
+    <section class="grid items-center gap-12 lg:grid-cols-[1fr_0.9fr]">
+      <div>
+        <p class="mb-5 font-semibold uppercase tracking-[0.25em] text-leaf">Identify the beauty around you</p>
+        <h1 class="max-w-xl text-5xl font-black leading-[1.05] tracking-tight sm:text-7xl">What flower is this?</h1>
+        <p class="mt-6 max-w-lg text-lg leading-8 text-ink/65">Upload a clear flower photo and your trained YOLO model will predict whether it is a Daisy, Lavender, Lily, Rose, or Sunflower.</p>
+
+        <form method="post" enctype="multipart/form-data" class="mt-10">
+          <label for="image" class="group block cursor-pointer rounded-[2rem] border-2 border-dashed border-leaf/35 bg-white/60 p-8 transition hover:border-leaf hover:bg-white">
+            <div class="flex flex-col items-center text-center">
+              <div class="mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-blush text-3xl">🌸</div>
+              <span class="text-lg font-bold">Choose a flower image</span>
+              <span id="file-name" class="mt-2 text-sm text-ink/50">JPG, PNG, or WEBP · up to 15 MB</span>
+            </div>
+            <input id="image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp,image/*" class="sr-only" required>
+          </label>
+          <button type="submit" class="mt-4 w-full rounded-2xl bg-leaf px-6 py-4 font-bold text-white shadow-lg shadow-leaf/20 transition hover:-translate-y-0.5 hover:bg-[#25583f]">Classify flower <span class="ml-2">→</span></button>
+        </form>
+        {% if error %}
+          <div class="mt-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">{{ error }}</div>
+        {% endif %}
+      </div>
+
+      <div class="relative">
+        <div class="absolute -right-4 -top-6 h-40 w-40 rounded-full bg-blush/70 blur-3xl"></div>
+        <div class="relative overflow-hidden rounded-[2.5rem] bg-[#e5eee5] p-4 shadow-2xl shadow-leaf/10">
+          {% if image_url %}
+            <img src="{{ image_url }}" alt="Uploaded flower" class="aspect-[4/5] w-full rounded-[2rem] object-cover">
+          {% else %}
+            <div class="flex aspect-[4/5] flex-col items-center justify-center rounded-[2rem] bg-gradient-to-br from-[#d9eadb] via-[#f5e3dd] to-[#d3e0d2] p-8 text-center">
+              <div class="text-8xl">🌷</div>
+              <p class="mt-6 max-w-xs text-sm font-semibold text-ink/55">Your uploaded image and prediction will appear here</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    {% if label %}
+    <section class="mt-16 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+      <div class="rounded-[2rem] bg-leaf p-8 text-white sm:p-10">
+        <p class="text-sm font-semibold uppercase tracking-widest text-white/65">Top prediction</p>
+        <h2 class="mt-5 text-5xl font-black">{{ label }}</h2>
+        <div class="mt-8 flex items-end justify-between border-t border-white/20 pt-5">
+          <span class="text-white/70">Confidence</span>
+          <span class="text-3xl font-bold">{{ '%.1f'|format(confidence * 100) }}%</span>
+        </div>
+      </div>
+      <div class="rounded-[2rem] bg-white p-8 shadow-sm sm:p-10">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-bold">Other possibilities</h2>
+          <span class="text-sm text-ink/40">Model confidence</span>
+        </div>
+        <div class="mt-6 space-y-5">
+          {% for prediction in predictions %}
+          <div>
+            <div class="mb-2 flex justify-between text-sm font-semibold"><span>{{ prediction.label }}</span><span class="text-ink/50">{{ '%.1f'|format(prediction.confidence * 100) }}%</span></div>
+            <div class="h-2 overflow-hidden rounded-full bg-ink/10"><div class="h-full rounded-full bg-leaf" style="width: {{ prediction.confidence * 100 }}%"></div></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    <footer class="mt-16 border-t border-ink/10 pt-6 text-sm text-ink/45">Powered by your custom YOLO classification model · five flower classes</footer>
+  </main>
+  <script>
+    document.getElementById('image').addEventListener('change', function () {
+      document.getElementById('file-name').textContent = this.files[0]?.name || 'JPG, PNG, or WEBP · up to 15 MB';
+    });
+  </script>
+</body>
+</html>
